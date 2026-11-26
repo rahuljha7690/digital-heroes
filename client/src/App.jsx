@@ -1,19 +1,29 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+
+const ComingSoon = ({ title }) => (
+  <main className="mx-auto min-h-[60vh] max-w-7xl px-5 py-24">
+    <h1 className="text-4xl font-black">{title}</h1>
+    <p className="mt-4 text-gray-600">This page is coming in the next development step.</p>
+  </main>
+);
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white">
-      <h1 className="text-4xl font-bold">
-        DIGITAL HEROES
-      </h1>
+    <BrowserRouter>
+      <Navbar />
 
-      <p className="mt-4 text-gray-300">
-        Custom Web-to-Print Platform
-      </p>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products/:division" element={<ComingSoon title="Product Catalogue" />} />
+        <Route path="/login" element={<ComingSoon title="Login" />} />
+        <Route path="/register" element={<ComingSoon title="Create Account" />} />
+      </Routes>
 
-      <button className="mt-6 rounded-lg bg-green-600 px-6 py-3 hover:bg-green-700 transition">
-        Explore Products
-      </button>
-    </div>
+      <Footer />
+    </BrowserRouter>
   );
 }
 
