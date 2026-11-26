@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import testRoutes from './routes/testRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 
@@ -16,6 +17,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/auth', authRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check
