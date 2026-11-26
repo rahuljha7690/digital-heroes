@@ -1,40 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import axios from 'axios';
-import { ArrowLeft, ArrowRight, Package } from 'lucide-react';
-import { divisions } from '../data/divisions';
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import axios from "axios";
+import { ArrowLeft, ArrowRight, Package } from "lucide-react";
+import { divisions } from "../data/divisions";
 
 const ProductCatalogue = () => {
   const { division } = useParams();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const selectedDivision = divisions.find(
-    (item) => item.id === division
-  );
+  const selectedDivision = divisions.find((item) => item.id === division);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        setError('');
+        setError("");
 
-        const response = await axios.get(
-          'http://localhost:5000/api/products',
-          {
-            params: {
-              division: selectedDivision?.name,
-            },
-          }
-        );
+        const response = await axios.get("http://localhost:5000/api/products", {
+          params: {
+            division: selectedDivision?.id,
+          },
+        });
 
         setProducts(response.data.products);
       } catch (err) {
         setError(
           err.response?.data?.message ||
-          'Could not load products. Please try again.'
+            "Could not load products. Please try again.",
         );
       } finally {
         setLoading(false);
@@ -45,7 +40,7 @@ const ProductCatalogue = () => {
       fetchProducts();
     } else {
       setLoading(false);
-      setError('Product division not found.');
+      setError("Product division not found.");
     }
   }, [selectedDivision]);
 
@@ -63,7 +58,6 @@ const ProductCatalogue = () => {
   return (
     <main className="min-h-screen bg-gray-50 px-5 py-16">
       <div className="mx-auto max-w-7xl">
-
         <Link
           to="/#divisions"
           className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-600"
@@ -104,7 +98,8 @@ const ProductCatalogue = () => {
               </h2>
 
               <p className="mt-3 text-gray-500">
-                We're preparing products for this division. Please check back soon.
+                We're preparing products for this division. Please check back
+                soon.
               </p>
             </div>
           ) : (
@@ -154,7 +149,6 @@ const ProductCatalogue = () => {
             </>
           )}
         </div>
-
       </div>
     </main>
   );
