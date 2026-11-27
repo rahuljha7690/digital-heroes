@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import { listUsers, setUserStatus, getReports, exportXero, setArchived } from '../controllers/adminExtrasController.js';
 import path from 'path';
 import {
   getDashboardStats,
@@ -24,6 +25,11 @@ const csvUpload = multer({
 });
 
 router.use(protect, authorize('admin'));
+router.get('/reports', getReports);
+router.get('/export/xero', exportXero);
+router.get('/users', listUsers);
+router.patch('/users/:userId/status', setUserStatus);
+router.patch('/orders/:orderId/archive', setArchived);
 
 router.get('/dashboard/stats', getDashboardStats);
 

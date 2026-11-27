@@ -21,7 +21,8 @@ import ProofReview from "./pages/ProofReview";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 import AdminDashboard from "./pages/AdminDashboard";
 import Dashboard from "./pages/Dashboard";
-
+import AdminReports from "./pages/AdminReports";
+import AdminUsers from "./pages/AdminUsers";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -76,6 +77,8 @@ function AppLayout() {
             path="/admin/orders/:orderId"
             element={<AdminOrderDetails />}
           />
+          <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

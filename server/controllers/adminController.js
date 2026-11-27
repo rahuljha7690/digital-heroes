@@ -83,12 +83,25 @@ export const getAllOrders = async (req, res) => {
       limit = 10,
       from,
       to,
+      division,
+      archived,
+      ready,
     } = req.query;
 
     const pageNumber = Math.max(1, Number(page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(limit) || 10));
 
     const filter = {};
+
+     filter.archived = archived === 'true';
+
+    if (division) {
+      const divisionProducts = await Product.find({ division }).select('_id');
+      filter.product = { $in: divisionProducts.map((product) => product._id) };
+    }
+
+    // ?ready=true -> only jobs whose print files are unlocked (proof approved)
+    if (ready === 'true') filter.proofApproved = true;
 
     if (status && status !== 'all') {
       const validStatuses = [
@@ -183,9 +196,14 @@ export const getAllOrders = async (req, res) => {
       Order.countDocuments(filter),
     ]);
 
+    const ordersWithFlags = orders.map((order) => ({
+      ...order,
+      filesUnlocked: Boolean(order.proofApproved && order.currentProof?.status === 'approved'),
+    }));
+
     return res.json({
       success: true,
-      orders,
+      orders: ordersWithFlags,
       pagination: {
         totalOrders,
         currentPage: pageNumber,

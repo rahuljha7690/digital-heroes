@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
@@ -23,6 +24,7 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { Link } from "react-router-dom";
 
 const STATUS_OPTIONS = [
   "all",
@@ -102,6 +104,7 @@ function AdminDashboard() {
 
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -110,6 +113,8 @@ function AdminDashboard() {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [division, setDivision] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -127,7 +132,8 @@ function AdminDashboard() {
       setStats(data.stats);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Unable to load dashboard statistics.",
+        err.response?.data?.message ||
+          "Unable to load dashboard statistics."
       );
     } finally {
       setStatsLoading(false);
@@ -143,28 +149,31 @@ function AdminDashboard() {
         params: {
           search: search.trim(),
           status,
+          division,
+          archived: showArchived,
           page,
           limit: 10,
         },
       });
 
       setOrders(data.orders || []);
+
       setPagination(
         data.pagination || {
           currentPage: 1,
           totalPages: 1,
           totalOrders: 0,
-        },
+        }
       );
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Unable to load orders. Please try again.",
+          "Unable to load orders. Please try again."
       );
     } finally {
       setLoading(false);
     }
-  }, [search, status, page]);
+  }, [search, status, division, showArchived, page]);
 
   useEffect(() => {
     fetchStats();
@@ -193,20 +202,22 @@ function AdminDashboard() {
     if (order.status === "proof") {
       if (!order.currentProof || !order.proofApproved) {
         setNotice(
-          `Order ${order.orderNumber} needs customer proof approval before production.`,
+          `Order ${order.orderNumber} needs customer proof approval before production.`
         );
         return;
       }
 
       nextStatus = "production";
     } else {
-      nextStatus = nextStatuses.find((item) => item !== "cancelled");
+      nextStatus = nextStatuses.find(
+        (item) => item !== "cancelled"
+      );
     }
 
     if (!nextStatus) return;
 
     const confirmed = window.confirm(
-      `Move ${order.orderNumber} from ${order.status} to ${nextStatus}?`,
+      `Move ${order.orderNumber} from ${order.status} to ${nextStatus}?`
     );
 
     if (!confirmed) return;
@@ -219,12 +230,15 @@ function AdminDashboard() {
         status: nextStatus,
       });
 
-      setNotice(`${order.orderNumber} moved to ${nextStatus} successfully.`);
+      setNotice(
+        `${order.orderNumber} moved to ${nextStatus} successfully.`
+      );
 
       await Promise.all([fetchOrders(), fetchStats()]);
     } catch (err) {
       setNotice(
-        err.response?.data?.message || "Unable to update order status.",
+        err.response?.data?.message ||
+          "Unable to update order status."
       );
     } finally {
       setUpdatingOrder(null);
@@ -309,17 +323,21 @@ function AdminDashboard() {
             <span className="ml-auto text-[9px]">NEXT</span>
           </div>
 
-          <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-500">
+          <Link
+            to="/admin/users"
+            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-400 transition hover:bg-white/5 hover:text-white"
+          >
             <Users size={19} />
-            Customers
-            <span className="ml-auto text-[9px]">NEXT</span>
-          </div>
+            Users
+          </Link>
 
-          <div className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-500">
+          <Link
+            to="/admin/reports"
+            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-400 transition hover:bg-white/5 hover:text-white"
+          >
             <Activity size={19} />
-            Analytics
-            <span className="ml-auto text-[9px]">NEXT</span>
-          </div>
+            Reports
+          </Link>
         </div>
 
         <div className="mt-auto border-t border-white/10 p-4">
@@ -363,7 +381,9 @@ function AdminDashboard() {
               <p className="text-xs text-gray-400">
                 Digital Heroes / Workspace
               </p>
-              <h1 className="text-lg font-bold">Production overview</h1>
+              <h1 className="text-lg font-bold">
+                Production overview
+              </h1>
             </div>
           </div>
 
@@ -375,7 +395,9 @@ function AdminDashboard() {
             >
               <RefreshCw
                 size={15}
-                className={loading || statsLoading ? "animate-spin" : ""}
+                className={
+                  loading || statsLoading ? "animate-spin" : ""
+                }
               />
               <span className="hidden sm:inline">Refresh</span>
             </button>
@@ -384,7 +406,9 @@ function AdminDashboard() {
 
             <div className="hidden text-right sm:block">
               <p className="text-xs font-semibold">{user?.name}</p>
-              <p className="text-[10px] text-gray-400">Admin account</p>
+              <p className="text-[10px] text-gray-400">
+                Admin account
+              </p>
             </div>
 
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700">
@@ -419,7 +443,10 @@ function AdminDashboard() {
             <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               <AlertCircle size={18} className="mt-0.5 shrink-0" />
               <div className="flex-1">{error}</div>
-              <button onClick={() => setError("")} aria-label="Dismiss error">
+              <button
+                onClick={() => setError("")}
+                aria-label="Dismiss error"
+              >
                 <X size={17} />
               </button>
             </div>
@@ -429,7 +456,10 @@ function AdminDashboard() {
             <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
               <AlertCircle size={18} className="mt-0.5 shrink-0" />
               <div className="flex-1">{notice}</div>
-              <button onClick={() => setNotice("")} aria-label="Dismiss notice">
+              <button
+                onClick={() => setNotice("")}
+                aria-label="Dismiss notice"
+              >
                 <X size={17} />
               </button>
             </div>
@@ -485,7 +515,9 @@ function AdminDashboard() {
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
               <div>
-                <p className="text-sm text-gray-500">Registered customers</p>
+                <p className="text-sm text-gray-500">
+                  Registered customers
+                </p>
                 <p className="mt-2 text-2xl font-bold">
                   {statsLoading ? "..." : (stats?.totalCustomers ?? 0)}
                 </p>
@@ -548,7 +580,9 @@ function AdminDashboard() {
                     }`}
                   >
                     <Icon size={19} className="mb-3 text-orange-600" />
-                    <p className="text-xs capitalize text-gray-500">{item}</p>
+                    <p className="text-xs capitalize text-gray-500">
+                      {item}
+                    </p>
                     <p className="mt-1 text-xl font-bold">
                       {statsLoading
                         ? "..."
@@ -589,6 +623,38 @@ function AdminDashboard() {
                   className="w-full rounded-xl border border-gray-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                 />
               </div>
+            </div>
+
+            {/* Product division and archive filters */}
+            <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-5 py-3 sm:px-6">
+              <select
+                value={division}
+                onChange={(e) => {
+                  setDivision(e.target.value);
+                  setPage(1);
+                }}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              >
+                <option value="">All product types</option>
+                <option value="labels-stickers">Labels & Stickers</option>
+                <option value="race-event-numbers">Race & Event Numbers</option>
+                <option value="mtb-boards">MTB Boards</option>
+                <option value="stamps">Stamps</option>
+                <option value="trophies">Trophies</option>
+                <option value="laser-cut-work">Laser-Cut Work</option>
+              </select>
+
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => {
+                    setShowArchived(e.target.checked);
+                    setPage(1);
+                  }}
+                />
+                Show archive
+              </label>
             </div>
 
             {/* Status filters */}
@@ -656,10 +722,11 @@ function AdminDashboard() {
                     </tr>
                   ) : (
                     orders.map((order) => {
-                      const nextStatuses = NEXT_STATUSES[order.status] || [];
+                      const nextStatuses =
+                        NEXT_STATUSES[order.status] || [];
 
                       const nextStatus = nextStatuses.find(
-                        (item) => item !== "cancelled",
+                        (item) => item !== "cancelled"
                       );
 
                       const blockedProduction =
@@ -709,8 +776,21 @@ function AdminDashboard() {
                           <td className="px-6 py-5">
                             <div className="space-y-2">
                               <StatusBadge status={order.status} />
+
                               <p className="text-[10px] capitalize text-gray-400">
                                 Payment: {order.paymentStatus || "pending"}
+                              </p>
+
+                              <p
+                                className={`text-[10px] font-bold ${
+                                  order.filesUnlocked
+                                    ? "text-green-600"
+                                    : "text-amber-600"
+                                }`}
+                              >
+                                {order.filesUnlocked
+                                  ? "Ready for production"
+                                  : "Files locked"}
                               </p>
                             </div>
                           </td>
@@ -784,7 +864,9 @@ function AdminDashboard() {
                 </span>
 
                 <button
-                  disabled={page >= (pagination.totalPages || 1) || loading}
+                  disabled={
+                    page >= (pagination.totalPages || 1) || loading
+                  }
                   onClick={() => setPage((current) => current + 1)}
                   className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50 disabled:opacity-30"
                   aria-label="Next page"
