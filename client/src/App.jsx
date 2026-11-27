@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import ProductCatalogue from "./pages/ProductCatalogue";
 import ProductDetails from "./pages/ProductDetails";
+import Designer from "./pages/Designer";
 
 const ComingSoon = ({ title }) => (
   <main className="mx-auto min-h-[60vh] max-w-7xl px-5 py-24">
@@ -27,6 +28,7 @@ function App() {
           path="/products/:division"
           element={<ComingSoon title="Product Catalogue" />}
         />
+        <Route path="/designer/:slug" element={<Designer />} />
         <Route path="/login" element={<ComingSoon title="Login" />} />
         <Route
           path="/register"
