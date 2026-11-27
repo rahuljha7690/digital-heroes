@@ -57,9 +57,17 @@ const [orderError, setOrderError] = useState("");
       designId: designId || undefined,
     });
 
-    navigate("/my-orders", {
-      state: { orderNumber: data.order.orderNumber },
-    });
+    try {
+      const checkout = await api.post(
+        `/payments/orders/${data.order._id}/checkout`,
+      );
+      window.location.href = checkout.data.url;
+    } catch {
+      // The order exists; the customer can pay from My orders.
+      navigate("/my-orders", {
+        state: { orderNumber: data.order.orderNumber },
+      });
+    }
   } catch (err) {
     setOrderError(
       err.response?.data?.message || "Unable to place your order."

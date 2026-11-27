@@ -13,6 +13,8 @@ import designRoutes from './routes/designRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import proofRoutes from './routes/proofRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import { stripeWebhook } from './controllers/paymentController.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +27,7 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 app.use(express.json({ limit: '2mb' })); // canvas JSON can be a little large
 app.use(express.urlencoded({ extended: true }));
 
@@ -38,6 +40,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/proofs', proofRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'Digital Heroes API is running!' });

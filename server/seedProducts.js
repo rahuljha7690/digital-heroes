@@ -154,6 +154,41 @@ const products = [
 
 ];
 
+// Every product prices by size / material, gets volume discounts, and carries 18% GST (VAT-inclusive totals).
+const DEFAULT_TIERS = [
+  { minQty: 100, percent: 10 },
+  { minQty: 500, percent: 15 },
+];
+const TAX_RATE = 0.18;
+
+const PRICING_EXTRAS = {
+  'custom-race-bib-numbers': {
+    sizeMultipliers: { A5: 1.4, A6: 1 },
+    materialMultipliers: { Paper: 1, Synthetic: 1.6 },
+  },
+  'mtb-number-board': {
+    materialMultipliers: { Plastic: 1 },
+    optionAddons: { shapes: { Standard: 0, Custom: 40 } },
+  },
+  'custom-business-stamp': {
+    sizeMultipliers: { Small: 1, Medium: 1.3, Large: 1.7 },
+    optionAddons: { types: { 'Self-inking': 80, Rubber: 0 } },
+  },
+  'personalised-trophy': {
+    sizeMultipliers: { Small: 1, Medium: 1.6, Large: 2.4 },
+    materialMultipliers: { Acrylic: 1.2, Wood: 1 },
+  },
+};
+
+products.forEach((product) => {
+  product.pricing = {
+    quantityDiscounts: DEFAULT_TIERS,
+    ...product.pricing,
+    ...PRICING_EXTRAS[product.slug],
+    taxRate: TAX_RATE,
+  };
+});
+
 const seedProducts = async () => {
   try {
     await connectDB();
