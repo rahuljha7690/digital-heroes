@@ -1,6 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Canvas, Rect, IText, FabricImage } from 'fabric';
 import {
   ArrowLeft,
@@ -8,6 +10,8 @@ import {
   ImagePlus,
   Download,
   Trash2,
+  Save,
+  CheckCircle2,
 } from 'lucide-react';
 
 const CANVAS_WIDTH = 700;
@@ -22,7 +26,9 @@ const PRINT_AREA = {
 };
 
 const Designer = () => {
-  const { slug } = useParams();
+  const { slug, designId } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const canvasElementRef = useRef(null);
   const fabricCanvasRef = useRef(null);
@@ -32,6 +38,50 @@ const Designer = () => {
   const [fontSize, setFontSize] = useState(32);
   const [textColor, setTextColor] = useState('#111827');
   const [canvasReady, setCanvasReady] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [designName, setDesignName] = useState('My design');
+  const [saving, setSaving] = useState(false);
+  const [savedDesignId, setSavedDesignId] = useState(designId || null);
+  const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    api.get(`/products/${slug}`).then(({ data }) => {
+      if (active) setProduct(data.product || data);
+    }).catch((error) => console.error('Unable to load product:', error));
+    return () => { active = false; };
+  }, [slug]);
+
+  // Load an existing saved design after the Fabric canvas is ready.
+  useEffect(() => {
+    if (!canvasReady || !designId) return;
+    let active = true;
+    api.get(`/designs/${designId}`).then(async ({ data }) => {
+      if (!active) return;
+      const design = data.design;
+      setDesignName(design.name || 'My design');
+      setSavedDesignId(design._id);
+      const canvas = fabricCanvasRef.current;
+      await canvas?.loadFromJSON(design.canvasData || {});
+      if (canvas) {
+        // loadFromJSON replaces canvas objects, so restore the non-exported print guide.
+        const boundary = new Rect({
+          left: PRINT_AREA.left, top: PRINT_AREA.top,
+          width: PRINT_AREA.width, height: PRINT_AREA.height,
+          fill: 'rgba(249, 115, 22, 0.025)', stroke: '#f97316',
+          strokeWidth: 2, strokeDashArray: [8, 5],
+          selectable: false, evented: false, excludeFromExport: true,
+        });
+        canvas.add(boundary);
+        canvas.sendObjectToBack(boundary);
+        canvas.requestRenderAll();
+      }
+    }).catch((error) => {
+      console.error('Unable to load saved design:', error);
+      setNotice(error.response?.data?.message || 'Unable to load this design.');
+    });
+    return () => { active = false; };
+  }, [canvasReady, designId]);
 
   // Initialise Fabric canvas
   useEffect(() => {
@@ -177,26 +227,16 @@ const Designer = () => {
     }
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-
-        reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/designs/assets', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      const image = await FabricImage.fromURL(dataUrl);
+      const image = await FabricImage.fromURL(data.assetUrl);
 
       const maxWidth = PRINT_AREA.width * 0.5;
       const maxHeight = PRINT_AREA.height * 0.5;
-
-      const scale = Math.min(
-        maxWidth / image.width,
-        maxHeight / image.height,
-        1
-      );
-
+      const scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
       image.set({
         left: PRINT_AREA.left + 40,
         top: PRINT_AREA.top + 40,
@@ -206,7 +246,6 @@ const Designer = () => {
         borderColor: '#f97316',
         transparentCorners: false,
       });
-
       canvas.add(image);
       canvas.setActiveObject(image);
       canvas.requestRenderAll();
@@ -229,6 +268,51 @@ const Designer = () => {
       canvas.remove(activeObject);
       canvas.discardActiveObject();
       canvas.requestRenderAll();
+    }
+  };
+
+  const saveDesign = async () => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !product?._id) {
+      setNotice('Product information is still loading. Please try again.');
+      return;
+    }
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/designer/${slug}` } });
+      return;
+    }
+    setSaving(true);
+    setNotice('');
+    try {
+      const previewDataUrl = canvas.toDataURL({
+        format: 'png', multiplier: 1,
+        left: PRINT_AREA.left, top: PRINT_AREA.top,
+        width: PRINT_AREA.width, height: PRINT_AREA.height,
+      });
+      const previewBlob = await (await fetch(previewDataUrl)).blob();
+      const previewForm = new FormData();
+      previewForm.append('file', previewBlob, 'design-preview.png');
+      const { data: uploaded } = await api.post('/designs/assets', previewForm, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const payload = {
+        productId: product._id,
+        name: designName.trim() || 'Untitled Design',
+        canvasData: canvas.toJSON(),
+        previewUrl: uploaded.assetUrl,
+      };
+      const response = savedDesignId
+        ? await api.patch(`/designs/${savedDesignId}`, payload)
+        : await api.post('/designs', payload);
+      const saved = response.data.design;
+      setSavedDesignId(saved._id);
+      setNotice('Design saved to your account.');
+      if (!designId) navigate(`/designer/${slug}/${saved._id}`, { replace: true });
+    } catch (error) {
+      console.error('Save design error:', error);
+      setNotice(error.response?.data?.message || 'Unable to save design. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -317,6 +401,17 @@ const Designer = () => {
               <p className="mt-1 text-sm text-gray-500">
                 Add and customise artwork.
               </p>
+            </div>
+            <div className="space-y-2 border-t border-gray-100 pt-4">
+              <label className="block text-xs font-bold text-gray-600">Design name</label>
+              <input value={designName} onChange={(event) => setDesignName(event.target.value)} maxLength={100}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-500" />
+              <button type="button" onClick={saveDesign} disabled={!canvasReady || saving || !product}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-3 text-sm font-bold text-white hover:bg-orange-700 disabled:opacity-50">
+                <Save size={17} /> {saving ? 'Saving...' : savedDesignId ? 'Update saved design' : 'Save design to account'}
+              </button>
+              {notice && <p className="flex items-start gap-2 text-xs text-gray-600"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-green-600" />{notice}</p>}
+              {!isAuthenticated && <p className="text-xs text-gray-400">Log in to save designs to your account.</p>}
             </div>
 
             <div className="space-y-3 border-t border-gray-100 pt-5">

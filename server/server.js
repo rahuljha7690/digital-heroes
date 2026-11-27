@@ -5,6 +5,8 @@ import testRoutes from './routes/testRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import designRoutes from './routes/designRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 
@@ -12,16 +14,18 @@ import connectDB from './config/db.js';
 dotenv.config();
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173'
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
 app.use('/api/designs', designRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check

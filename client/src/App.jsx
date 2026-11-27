@@ -7,6 +7,7 @@ import ProductDetails from './pages/ProductDetails';
 import Designer from './pages/Designer';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import MyDesigns from './pages/MyDesigns';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -27,10 +28,12 @@ function App() {
           <Route path="/products/:division" element={<ProductCatalogue />} />
           <Route path="/product/:slug" element={<ProductDetails />} />
           <Route path="/designer/:slug" element={<Designer />} />
+          <Route path="/designer/:slug/:designId" element={<Designer />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
             <Route path="/dashboard" element={<ComingSoon title="Customer Dashboard" />} />
+            <Route path="/my-designs" element={<MyDesigns />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<ComingSoon title="Admin Dashboard" />} />

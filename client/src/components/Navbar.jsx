@@ -31,6 +31,7 @@ const Navbar = () => {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
+              {user.role === 'customer' && <Link to="/my-designs" className="text-sm font-semibold text-gray-700 hover:text-orange-600">My designs</Link>}
               <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-orange-600"><UserRound size={17} /> {user.name.split(' ')[0]}</Link>
               <button onClick={handleLogout} className="flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2.5 text-sm font-semibold transition hover:border-orange-600 hover:text-orange-600"><LogOut size={16} /> Logout</button>
             </>
@@ -55,6 +56,7 @@ const Navbar = () => {
             <a onClick={() => setMenuOpen(false)} href="/#about" className="text-sm font-medium">About</a>
             {user ? (
               <>
+                {user.role === 'customer' && <Link onClick={() => setMenuOpen(false)} to="/my-designs" className="text-sm font-semibold">My designs</Link>}
                 <Link onClick={() => setMenuOpen(false)} to={user.role === 'admin' ? '/admin' : '/dashboard'} className="text-sm font-semibold">My account</Link>
                 <button onClick={handleLogout} className="text-left text-sm font-semibold text-orange-600">Logout</button>
               </>
