@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import designRoutes from './routes/designRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import proofRoutes from './routes/proofRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -30,6 +31,7 @@ app.use('/api/designs', designRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/proofs', proofRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check
