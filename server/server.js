@@ -15,6 +15,7 @@ import proofRoutes from './routes/proofRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { stripeWebhook } from './controllers/paymentController.js';
+import customerRoutes from './routes/customerRoutes.js'
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,6 +42,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/proofs', proofRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/customer', customerRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'Digital Heroes API is running!' });

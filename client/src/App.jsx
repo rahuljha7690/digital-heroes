@@ -20,6 +20,8 @@ import MyOrders from "./pages/MyOrders";
 import ProofReview from "./pages/ProofReview";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 import AdminDashboard from "./pages/AdminDashboard";
+import Dashboard from "./pages/Dashboard";
+
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -58,10 +60,7 @@ function AppLayout() {
 
         {/* Customer protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-          <Route
-            path="/dashboard"
-            element={<ComingSoon title="Customer Dashboard" />}
-          />
+          <Route path="/dashboard" element={<Dashboard />} />
 
           <Route path="/my-designs" element={<MyDesigns />} />
           <Route path="/my-orders" element={<MyOrders />} />
