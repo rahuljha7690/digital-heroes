@@ -72,8 +72,12 @@ function AppLayout() {
         {/* Admin protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminDashboard />} />
+
+          <Route
+            path="/admin/orders/:orderId"
+            element={<AdminOrderDetails />}
+          />
         </Route>
-        <Route path="/admin/orders/:orderId" element={<AdminOrderDetails />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
