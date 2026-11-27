@@ -201,6 +201,14 @@ export default function MyOrders() {
                       </Link>
                     )}
                   </div>
+                  {order.status === 'proof' && (
+  <Link
+    to={`/orders/${order._id}/proof`}
+    className="inline-flex items-center rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+  >
+    Review artwork proof
+  </Link>
+)}
                 </article>
               );
             })}

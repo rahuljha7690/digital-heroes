@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import MyDesigns from './pages/MyDesigns';
 import MyOrders from "./pages/MyOrders";
+import ProofReview from './pages/ProofReview';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -36,6 +37,7 @@ function App() {
             <Route path="/dashboard" element={<ComingSoon title="Customer Dashboard" />} />
             <Route path="/my-designs" element={<MyDesigns />} />
             <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/orders/:orderId/proof" element={<ProofReview />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<ComingSoon title="Admin Dashboard" />} />
