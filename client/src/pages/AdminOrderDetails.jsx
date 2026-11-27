@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import api from '../services/api';
+import AdminPrintFiles from '../components/AdminPrintFiles';
 
 const formatCurrency = (amount = 0) =>
   new Intl.NumberFormat('en-IN', {
@@ -121,12 +122,61 @@ export default function AdminOrderDetails() {
     }
   };
 
+  // Render the customer's saved design into a proof automatically.
+  const generateProof = async () => {
+    try {
+      setCreatingProof(true);
+      setError('');
+      setMessage('');
+
+      const { data } = await api.post(
+        `/proofs/orders/${orderId}/generate`,
+        {
+          notes: notes.trim(),
+        }
+      );
+
+      setMessage(data.message);
+      setNotes('');
+
+      await fetchOrderData();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          'Unable to generate proof.'
+      );
+    } finally {
+      setCreatingProof(false);
+    }
+  };
+
+  const toggleArchive = async () => {
+    try {
+      const { data } = await api.patch(
+        `/admin/orders/${orderId}/archive`,
+        {
+          archived: !order.archived,
+        }
+      );
+
+      setMessage(data.message);
+      await fetchOrderData();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          'Unable to update archive state.'
+      );
+    }
+  };
+
   const updateStatus = async (nextStatus) => {
     if (
       nextStatus === 'production' &&
       (!order.currentProof || !order.proofApproved)
     ) {
-      setError('Customer proof approval is required before production.');
+      setError(
+        'Customer proof approval is required before production.'
+      );
       return;
     }
 
@@ -165,7 +215,10 @@ export default function AdminOrderDetails() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <LoaderCircle size={34} className="animate-spin text-orange-600" />
+        <LoaderCircle
+          size={34}
+          className="animate-spin text-orange-600"
+        />
       </div>
     );
   }
@@ -177,6 +230,7 @@ export default function AdminOrderDetails() {
           <p className="text-red-600">
             {error || 'Order not found.'}
           </p>
+
           <Link
             to="/admin"
             className="mt-5 inline-block font-bold text-orange-600"
@@ -194,6 +248,7 @@ export default function AdminOrderDetails() {
   return (
     <main className="min-h-screen bg-[#f7f8fa] px-4 py-8 sm:px-8">
       <div className="mx-auto max-w-6xl space-y-7">
+
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -289,6 +344,17 @@ export default function AdminOrderDetails() {
             })}
           </div>
 
+          {['completed', 'cancelled'].includes(order.status) && (
+            <button
+              onClick={toggleArchive}
+              className="mt-4 rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold hover:bg-gray-50"
+            >
+              {order.archived
+                ? 'Restore from archive'
+                : 'Archive order'}
+            </button>
+          )}
+
           {order.status === 'proof' && !order.proofApproved && (
             <p className="mt-4 text-xs text-amber-700">
               Production remains locked until the customer approves the latest proof.
@@ -303,26 +369,34 @@ export default function AdminOrderDetails() {
               <div className="rounded-xl bg-blue-50 p-3 text-blue-700">
                 <User size={21} />
               </div>
-              <h2 className="text-lg font-bold">Customer information</h2>
+              <h2 className="text-lg font-bold">
+                Customer information
+              </h2>
             </div>
 
             <div className="mt-6 space-y-4">
               <div>
-                <p className="text-xs text-gray-400">Customer name</p>
+                <p className="text-xs text-gray-400">
+                  Customer name
+                </p>
                 <p className="mt-1 font-semibold">
                   {order.customer?.name || '—'}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Email address</p>
+                <p className="text-xs text-gray-400">
+                  Email address
+                </p>
                 <p className="mt-1 break-all font-semibold">
                   {order.customer?.email || '—'}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Phone</p>
+                <p className="text-xs text-gray-400">
+                  Phone
+                </p>
                 <p className="mt-1 font-semibold">
                   {order.customer?.phone || '—'}
                 </p>
@@ -335,40 +409,52 @@ export default function AdminOrderDetails() {
               <div className="rounded-xl bg-orange-50 p-3 text-orange-700">
                 <Package size={21} />
               </div>
-              <h2 className="text-lg font-bold">Product information</h2>
+              <h2 className="text-lg font-bold">
+                Product information
+              </h2>
             </div>
 
             <div className="mt-6 space-y-4">
               <div>
-                <p className="text-xs text-gray-400">Product</p>
+                <p className="text-xs text-gray-400">
+                  Product
+                </p>
                 <p className="mt-1 font-semibold">
                   {order.product?.name || '—'}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Division</p>
+                <p className="text-xs text-gray-400">
+                  Division
+                </p>
                 <p className="mt-1 capitalize font-semibold">
                   {order.product?.division || '—'}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Quantity</p>
+                <p className="text-xs text-gray-400">
+                  Quantity
+                </p>
                 <p className="mt-1 font-semibold">
                   {order.configuration?.quantity || 1}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Order total</p>
+                <p className="text-xs text-gray-400">
+                  Order total
+                </p>
                 <p className="mt-1 text-xl font-black">
                   {formatCurrency(order.pricing?.total)}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400">Payment status</p>
+                <p className="text-xs text-gray-400">
+                  Payment status
+                </p>
                 <p className="mt-1 capitalize font-semibold">
                   {order.paymentStatus}
                 </p>
@@ -379,7 +465,9 @@ export default function AdminOrderDetails() {
 
         {/* Configuration */}
         <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold">Order configuration</h2>
+          <h2 className="text-lg font-bold">
+            Order configuration
+          </h2>
 
           <pre className="mt-4 overflow-x-auto rounded-xl bg-gray-50 p-4 text-xs leading-6 text-gray-700">
             {JSON.stringify(order.configuration || {}, null, 2)}
@@ -387,7 +475,10 @@ export default function AdminOrderDetails() {
 
           {order.design?.previewUrl && (
             <div className="mt-5">
-              <p className="mb-3 text-sm font-bold">Submitted design preview</p>
+              <p className="mb-3 text-sm font-bold">
+                Submitted design preview
+              </p>
+
               <img
                 src={order.design.previewUrl}
                 alt="Submitted design"
@@ -397,6 +488,13 @@ export default function AdminOrderDetails() {
           )}
         </section>
 
+        {/* Admin print files */}
+        <AdminPrintFiles
+          orderId={orderId}
+          onMessage={setMessage}
+          onError={setError}
+        />
+
         {/* Proof creation */}
         <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3">
@@ -405,7 +503,9 @@ export default function AdminOrderDetails() {
             </div>
 
             <div>
-              <h2 className="text-lg font-bold">Create artwork proof</h2>
+              <h2 className="text-lg font-bold">
+                Create artwork proof
+              </h2>
               <p className="mt-1 text-xs text-gray-500">
                 Submit a preview for customer approval.
               </p>
@@ -417,51 +517,81 @@ export default function AdminOrderDetails() {
               Proof creation is unavailable for this order.
             </p>
           ) : (
-            <form onSubmit={createProof} className="mt-6 space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Proof preview URL
-                </label>
-
-                <input
-                  type="url"
-                  required
-                  maxLength={2048}
-                  value={previewUrl}
-                  onChange={(e) => setPreviewUrl(e.target.value)}
-                  placeholder="https://example.com/proof-preview.png"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500"
-                />
-
-                <p className="mt-2 text-xs text-gray-400">
-                  Provide a publicly accessible image URL for the proof preview.
+            <>
+              {/* Automatic proof generation */}
+              <div className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                <p className="text-sm font-bold text-orange-900">
+                  Generate from the customer&apos;s design
                 </p>
+
+                <p className="mt-1 text-xs text-orange-800">
+                  Renders the saved artwork server-side and creates the next proof version. Optional notes below are included.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={generateProof}
+                  disabled={creatingProof || !order.design}
+                  className="mt-3 rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-700 disabled:opacity-40"
+                >
+                  {creatingProof
+                    ? 'Working...'
+                    : 'Generate proof from design'}
+                </button>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold">
-                  Designer notes
-                </label>
-
-                <textarea
-                  rows={4}
-                  maxLength={2000}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add printing instructions or details for the customer..."
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={creatingProof}
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-700 disabled:opacity-50"
+              {/* Manual proof creation */}
+              <form
+                onSubmit={createProof}
+                className="mt-6 space-y-4"
               >
-                <Send size={17} />
-                {creatingProof ? 'Creating proof...' : 'Create new proof revision'}
-              </button>
-            </form>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold">
+                    Proof preview URL
+                  </label>
+
+                  <input
+                    type="url"
+                    required
+                    maxLength={2048}
+                    value={previewUrl}
+                    onChange={(e) => setPreviewUrl(e.target.value)}
+                    placeholder="https://example.com/proof-preview.png"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500"
+                  />
+
+                  <p className="mt-2 text-xs text-gray-400">
+                    Provide a publicly accessible image URL for the proof preview.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold">
+                    Designer notes
+                  </label>
+
+                  <textarea
+                    rows={4}
+                    maxLength={2000}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add printing instructions or details for the customer..."
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={creatingProof}
+                  className="inline-flex items-center gap-2 rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-orange-700 disabled:opacity-50"
+                >
+                  <Send size={17} />
+                  {creatingProof
+                    ? 'Creating proof...'
+                    : 'Create new proof revision'}
+                </button>
+              </form>
+            </>
           )}
         </section>
 
@@ -469,7 +599,9 @@ export default function AdminOrderDetails() {
         <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3">
             <ShieldCheck className="text-orange-600" size={23} />
-            <h2 className="text-lg font-bold">Proof version history</h2>
+            <h2 className="text-lg font-bold">
+              Proof version history
+            </h2>
           </div>
 
           {proofs.length === 0 ? (
