@@ -5,36 +5,65 @@ import connectDB from './config/db.js';
 import Product from './models/Product.js';
 
 const products = [
+
   {
     name: 'Custom Vinyl Stickers',
     slug: 'custom-vinyl-stickers',
     division: 'labels-stickers',
     description: 'Durable custom vinyl stickers for branding and packaging.',
+
     configuration: {
       shapes: ['Circle', 'Square', 'Custom'],
       finishes: ['Gloss', 'Matte'],
+      sizes: ['Small', 'Medium', 'Large'],
     },
+
     pricing: {
       basePrice: 5,
       currency: 'INR',
       unit: 'piece',
+
+      sizeMultipliers: {
+        Small: 1,
+        Medium: 1.5,
+        Large: 2,
+      },
+
+      optionAddons: {
+        finishes: {
+          Gloss: 0,
+          Matte: 2,
+        },
+      },
+
+      quantityDiscounts: [
+        { minQty: 100, percent: 10 },
+        { minQty: 500, percent: 15 },
+      ],
+
+      taxRate: 0,
     },
   },
+
+
   {
     name: 'Custom Race Bib Numbers',
     slug: 'custom-race-bib-numbers',
     division: 'race-event-numbers',
     description: 'Custom printed race bibs for sporting events.',
+
     configuration: {
       materials: ['Paper', 'Synthetic'],
       sizes: ['A5', 'A6'],
     },
+
     pricing: {
       basePrice: 15,
       currency: 'INR',
       unit: 'piece',
     },
   },
+
   {
     name: 'MTB Number Board',
     slug: 'mtb-number-board',
