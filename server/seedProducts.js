@@ -109,21 +109,49 @@ const products = [
       unit: 'piece',
     },
   },
+
   {
     name: 'Custom Laser Cut Sign',
     slug: 'custom-laser-cut-sign',
     division: 'laser-cut-work',
     description: 'Precision laser-cut signs for businesses and creative projects.',
+
     configuration: {
       materials: ['Acrylic', 'Wood'],
       thickness: ['3mm', '5mm'],
+
+      dimensions: {
+        enabled: true,
+        unit: 'cm',
+        minWidthCm: 5,
+        maxWidthCm: 200,
+        minHeightCm: 5,
+        maxHeightCm: 200,
+      },
     },
+
     pricing: {
       basePrice: 300,
       currency: 'INR',
       unit: 'piece',
+
+      materialMultipliers: {
+        Acrylic: 1.5,
+        Wood: 1,
+      },
+
+      optionAddons: {
+        thickness: {
+          '3mm': 0,
+          '5mm': 50,
+        },
+      },
+
+      dimensionPricePerSqCm: 0.5,
+      taxRate: 0,
     },
   },
+
 ];
 
 const seedProducts = async () => {

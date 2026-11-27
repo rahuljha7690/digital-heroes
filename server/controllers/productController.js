@@ -118,9 +118,12 @@ export const calculateProductQuote = async (req, res) => {
     }
 
     // Apply selected size multiplier
-    const size = options.size || options.sizes;
-    const sizeMultiplier = size
-      ? Number(pricing.sizeMultipliers?.[size] ?? 1)
+
+    // Apply selected size multiplier
+    const selectedSize = options.size || options.sizes;
+
+    const sizeMultiplier = selectedSize
+      ? Number(pricing.sizeMultipliers?.[selectedSize] ?? 1)
       : 1;
 
     if (!Number.isFinite(sizeMultiplier) || sizeMultiplier < 0) {
@@ -130,23 +133,92 @@ export const calculateProductQuote = async (req, res) => {
       });
     }
 
-    // Add any configured option surcharges
+    // Apply selected material multiplier
+    const selectedMaterial = options.material || options.materials;
+
+    const materialMultiplier = selectedMaterial
+      ? Number(pricing.materialMultipliers?.[selectedMaterial] ?? 1)
+      : 1;
+
+    if (
+      !Number.isFinite(materialMultiplier) ||
+      materialMultiplier < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid material pricing configuration',
+      });
+    }
+
+    // Add configured option surcharges
     let optionAddons = 0;
 
     for (const [key, value] of Object.entries(options)) {
-      const addon = Number(pricing.optionAddons?.[key]?.[value] ?? 0);
+      if (['widthCm', 'heightCm'].includes(key)) continue;
+
+      const addon = Number(
+        pricing.optionAddons?.[key]?.[value] ?? 0
+      );
 
       if (!Number.isFinite(addon) || addon < 0) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid option pricing configuration',
+          message: `Invalid pricing for option: ${key}`,
         });
       }
 
       optionAddons += addon;
     }
 
-    const unitPrice = (basePrice * sizeMultiplier) + optionAddons;
+    // Calculate dimensions-based pricing when enabled
+    let dimensionCharge = 0;
+    const dimensionConfig = product.configuration?.dimensions;
+
+    if (dimensionConfig?.enabled) {
+      const width = Number(options.widthCm);
+      const height = Number(options.heightCm);
+
+      const {
+        minWidthCm = 1,
+        maxWidthCm = 200,
+        minHeightCm = 1,
+        maxHeightCm = 200,
+      } = dimensionConfig;
+
+      if (
+        !Number.isFinite(width) ||
+        !Number.isFinite(height) ||
+        width < minWidthCm ||
+        width > maxWidthCm ||
+        height < minHeightCm ||
+        height > maxHeightCm
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: `Width must be ${minWidthCm}-${maxWidthCm} cm and height must be ${minHeightCm}-${maxHeightCm} cm`,
+        });
+      }
+
+      const pricePerSqCm = Number(
+        pricing.dimensionPricePerSqCm ?? 0
+      );
+
+      if (!Number.isFinite(pricePerSqCm) || pricePerSqCm < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid dimension pricing configuration',
+        });
+      }
+
+      dimensionCharge = width * height * pricePerSqCm;
+    }
+
+    // Final unit price
+    const unitPrice =
+      (basePrice * sizeMultiplier * materialMultiplier) +
+      optionAddons +
+      dimensionCharge;
+
     const subtotal = unitPrice * qty;
 
     // Find the highest eligible quantity discount

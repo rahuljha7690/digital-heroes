@@ -1,7 +1,6 @@
-
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import axios from "axios";
 import {
   ArrowLeft,
   Minus,
@@ -9,9 +8,9 @@ import {
   Package,
   CheckCircle2,
   LoaderCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = "http://localhost:5000/api";
 
 const ProductDetails = () => {
   const { slug } = useParams();
@@ -23,22 +22,20 @@ const ProductDetails = () => {
 
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [loadingQuote, setLoadingQuote] = useState(false);
-  const [error, setError] = useState('');
-  const [quoteError, setQuoteError] = useState('');
+  const [error, setError] = useState("");
+  const [quoteError, setQuoteError] = useState("");
 
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoadingProduct(true);
-        setError('');
+        setError("");
         setProduct(null);
         setOptions(null);
         setQuote(null);
 
-        const response = await axios.get(
-          `${API_URL}/products/${slug}`
-        );
+        const response = await axios.get(`${API_URL}/products/${slug}`);
 
         const fetchedProduct = response.data.product;
 
@@ -52,15 +49,17 @@ const ProductDetails = () => {
             if (Array.isArray(values) && values.length > 0) {
               defaults[key] = values[0];
             }
-          }
+          },
         );
+
+        if (fetchedProduct.configuration?.dimensions?.enabled) {
+          defaults.widthCm = 20;
+          defaults.heightCm = 10;
+        }
 
         setOptions(defaults);
       } catch (err) {
-        setError(
-          err.response?.data?.message ||
-          'Unable to load this product.'
-        );
+        setError(err.response?.data?.message || "Unable to load this product.");
       } finally {
         setLoadingProduct(false);
       }
@@ -78,15 +77,12 @@ const ProductDetails = () => {
     const calculateQuote = async () => {
       try {
         setLoadingQuote(true);
-        setQuoteError('');
+        setQuoteError("");
 
-        const response = await axios.post(
-          `${API_URL}/products/${slug}/quote`,
-          {
-            quantity,
-            options,
-          }
-        );
+        const response = await axios.post(`${API_URL}/products/${slug}/quote`, {
+          quantity,
+          options,
+        });
 
         if (isCurrentRequest) {
           setQuote(response.data.quote);
@@ -95,8 +91,7 @@ const ProductDetails = () => {
         if (isCurrentRequest) {
           setQuote(null);
           setQuoteError(
-            err.response?.data?.message ||
-            'Unable to calculate price.'
+            err.response?.data?.message || "Unable to calculate price.",
           );
         }
       } finally {
@@ -122,9 +117,9 @@ const ProductDetails = () => {
   };
 
   const formatPrice = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: quote?.currency || product?.pricing?.currency || 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: quote?.currency || product?.pricing?.currency || "INR",
       maximumFractionDigits: 2,
     }).format(amount || 0);
   };
@@ -143,7 +138,7 @@ const ProductDetails = () => {
       <main className="mx-auto min-h-[60vh] max-w-7xl px-5 py-20">
         <h1 className="text-3xl font-black">Product unavailable</h1>
         <p className="mt-3 text-gray-600">
-          {error || 'This product could not be found.'}
+          {error || "This product could not be found."}
         </p>
         <Link
           to="/"
@@ -157,15 +152,12 @@ const ProductDetails = () => {
   }
 
   const configurableOptions = Object.entries(
-    product.configuration || {}
-  ).filter(
-    ([, values]) => Array.isArray(values) && values.length > 0
-  );
+    product.configuration || {},
+  ).filter(([, values]) => Array.isArray(values) && values.length > 0);
 
   return (
     <main className="min-h-screen bg-gray-50 px-5 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
-
         <Link
           to={`/products/${product.division}`}
           className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-600"
@@ -175,7 +167,6 @@ const ProductDetails = () => {
         </Link>
 
         <div className="mt-9 grid gap-10 lg:grid-cols-2">
-
           {/* Product information */}
           <section>
             <div className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-white md:min-h-[480px]">
@@ -217,7 +208,6 @@ const ProductDetails = () => {
 
           {/* Product configuration */}
           <section className="h-fit rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-
             <div className="border-b border-gray-100 pb-6">
               <p className="text-sm font-bold uppercase tracking-widest text-orange-600">
                 Configure your product
@@ -240,15 +230,13 @@ const ProductDetails = () => {
                     htmlFor={`option-${key}`}
                     className="mb-2 block text-sm font-bold capitalize text-gray-800"
                   >
-                    {key.replace(/([A-Z])/g, ' $1')}
+                    {key.replace(/([A-Z])/g, " $1")}
                   </label>
 
                   <select
                     id={`option-${key}`}
-                    value={options?.[key] || ''}
-                    onChange={(event) =>
-                      updateOption(key, event.target.value)
-                    }
+                    value={options?.[key] || ""}
+                    onChange={(event) => updateOption(key, event.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                   >
                     {values.map((value) => (
@@ -259,6 +247,53 @@ const ProductDetails = () => {
                   </select>
                 </div>
               ))}
+
+              {/* Custom dimensions */}
+              {product.configuration?.dimensions?.enabled && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="widthCm"
+                      className="mb-2 block text-sm font-bold text-gray-800"
+                    >
+                      Width ({product.configuration.dimensions.unit || "cm"})
+                    </label>
+
+                    <input
+                      id="widthCm"
+                      type="number"
+                      min={product.configuration.dimensions.minWidthCm}
+                      max={product.configuration.dimensions.maxWidthCm}
+                      value={options?.widthCm ?? ""}
+                      onChange={(event) =>
+                        updateOption("widthCm", event.target.value)
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="heightCm"
+                      className="mb-2 block text-sm font-bold text-gray-800"
+                    >
+                      Height ({product.configuration.dimensions.unit || "cm"})
+                    </label>
+
+                    <input
+                      id="heightCm"
+                      type="number"
+                      min={product.configuration.dimensions.minHeightCm}
+                      max={product.configuration.dimensions.maxHeightCm}
+                      value={options?.heightCm ?? ""}
+                      onChange={(event) =>
+                        updateOption("heightCm", event.target.value)
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Quantity */}
               <div>
@@ -292,8 +327,8 @@ const ProductDetails = () => {
                     onChange={(event) => {
                       const value = event.target.value;
 
-                      if (value === '') {
-                        setQuantity('');
+                      if (value === "") {
+                        setQuantity("");
                         return;
                       }
 
@@ -312,7 +347,7 @@ const ProductDetails = () => {
                     type="button"
                     onClick={() =>
                       setQuantity((current) =>
-                        Math.min(100000, (Number(current) || 0) + 1)
+                        Math.min(100000, (Number(current) || 0) + 1),
                       )
                     }
                     disabled={quantity >= 100000}
@@ -343,9 +378,7 @@ const ProductDetails = () => {
               </div>
 
               {quoteError ? (
-                <p className="mt-5 text-sm text-red-300">
-                  {quoteError}
-                </p>
+                <p className="mt-5 text-sm text-red-300">{quoteError}</p>
               ) : quote ? (
                 <div className="mt-5 space-y-4">
                   <div className="flex justify-between text-sm text-gray-300">
@@ -383,8 +416,8 @@ const ProductDetails = () => {
               ) : (
                 <p className="mt-5 text-sm text-gray-400">
                   {loadingQuote
-                    ? 'Calculating your price...'
-                    : 'Select options to calculate your price.'}
+                    ? "Calculating your price..."
+                    : "Select options to calculate your price."}
                 </p>
               )}
             </div>
@@ -393,7 +426,6 @@ const ProductDetails = () => {
               Prices shown are based on the current demo pricing configuration.
               Checkout and order placement will be added in a later phase.
             </p>
-
           </section>
         </div>
       </div>
