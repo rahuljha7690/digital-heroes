@@ -4,6 +4,7 @@ import cors from 'cors';
 import testRoutes from './routes/testRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import designRoutes from './routes/designRoutes.js';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 
@@ -16,10 +17,11 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173'
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/designs', designRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check
