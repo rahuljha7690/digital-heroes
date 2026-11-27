@@ -35,7 +35,16 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       required: true,
     },
+    currentProof: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Proof',
+      default: null,
+    },
 
+    proofApproved: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: [
