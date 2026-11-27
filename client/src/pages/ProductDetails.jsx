@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams ,useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -17,6 +17,8 @@ const API_URL = "http://localhost:5000/api";
 
 const ProductDetails = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const designId = searchParams.get("design");
 
   const [product, setProduct] = useState(null);
   const [options, setOptions] = useState(null);
@@ -52,6 +54,7 @@ const [orderError, setOrderError] = useState("");
       productId: product._id,
       quantity: Number(quantity),
       options,
+      designId: designId || undefined,
     });
 
     navigate("/my-orders", {
@@ -467,7 +470,21 @@ const [orderError, setOrderError] = useState("");
     {orderError}
   </p>
 )}
-
+<div className="mt-6 rounded-xl border border-dashed border-gray-300 p-4 text-sm">
+              {designId ? (
+                <p className="flex flex-wrap items-center justify-between gap-2 text-gray-700">
+                  <span className="inline-flex items-center gap-2 font-semibold">
+                    <CheckCircle2 size={16} className="text-green-600" /> Your saved design is attached to this order.
+                  </span>
+                  <Link to={`/designer/${slug}/${designId}`} className="font-bold text-orange-600">Edit design</Link>
+                </p>
+              ) : (
+                <p className="flex flex-wrap items-center justify-between gap-2 text-gray-600">
+                  <span>No artwork yet? Design it in the browser (or upload finished files after ordering).</span>
+                  <Link to={`/designer/${slug}`} className="font-bold text-orange-600">Open designer</Link>
+                </p>
+              )}
+            </div>
 <button
   type="button"
   onClick={handlePlaceOrder}

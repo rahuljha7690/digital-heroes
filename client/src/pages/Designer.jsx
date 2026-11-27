@@ -412,6 +412,11 @@ const Designer = () => {
               </button>
               {notice && <p className="flex items-start gap-2 text-xs text-gray-600"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-green-600" />{notice}</p>}
               {!isAuthenticated && <p className="text-xs text-gray-400">Log in to save designs to your account.</p>}
+              {savedDesignId && (
+                <Link to={`/product/${slug}?design=${savedDesignId}`} className="flex w-full items-center justify-center rounded-lg bg-gray-950 px-4 py-3 text-sm font-bold text-white hover:bg-gray-800">
+                  Order with this design
+                </Link>
+              )}
             </div>
 
             <div className="space-y-3 border-t border-gray-100 pt-5">
