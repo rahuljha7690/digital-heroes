@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import { ArrowLeft, ArrowRight, Package } from "lucide-react";
 import { divisions } from "../data/divisions";
 
@@ -19,7 +19,7 @@ const ProductCatalogue = () => {
         setLoading(true);
         setError("");
 
-        const response = await axios.get("http://localhost:5000/api/products", {
+        const response = await api.get("/products", {
           params: {
             division: selectedDivision?.id,
           },

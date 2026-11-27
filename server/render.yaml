@@ -1,0 +1,47 @@
+# Render Blueprint: New + > Blueprint > pick this repo.
+# Edit the two service names if they are already taken on Render.
+services:
+  - type: web
+    name: digital-heroes-api
+    runtime: node
+    rootDir: server
+    plan: starter            # persistent disk + SMTP need a paid plan. Use "free" only for a throwaway demo.
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: dh-storage
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - { key: NODE_VERSION, value: "22" }
+      - { key: NODE_ENV, value: production }
+      - { key: STORAGE_DIR, value: /var/data }
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: JWT_EXPIRES_IN, value: 7d }
+      - { key: ALLOW_MOCK_PAYMENTS, value: "true" }   # set "false" once Stripe keys are added
+      - { key: MONGO_URI, sync: false }
+      - { key: CLIENT_URL, sync: false }              # the static site URL, e.g. https://digital-heroes.onrender.com
+      - { key: STRIPE_SECRET_KEY, sync: false }
+      - { key: STRIPE_WEBHOOK_SECRET, sync: false }
+      - { key: SMTP_HOST, sync: false }
+      - { key: SMTP_PORT, value: "587" }
+      - { key: SMTP_USER, sync: false }
+      - { key: SMTP_PASS, sync: false }
+      - { key: MAIL_FROM, value: "Digital Heroes <no-reply@digitalheroes.co.in>" }
+      - { key: ADMIN_NOTIFY_EMAIL, sync: false }
+      - { key: COMPANY_NAME, value: Digital Heroes }
+
+  - type: web
+    name: digital-heroes
+    runtime: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - { key: NODE_VERSION, value: "22" }
+      - { key: VITE_API_URL, sync: false }            # https://digital-heroes-api.onrender.com/api
+    routes:
+      - type: rewrite        # makes React Router deep links (/dashboard, /login) work on refresh
+        source: /*
+        destination: /index.html

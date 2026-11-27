@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useParams ,useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import axios from "axios";
 import {
   ArrowLeft,
   Minus,
@@ -12,8 +11,6 @@ import {
   CheckCircle2,
   LoaderCircle,
 } from "lucide-react";
-
-const API_URL = "http://localhost:5000/api";
 
 const ProductDetails = () => {
   const { slug } = useParams();
@@ -25,57 +22,56 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(100);
   const [quote, setQuote] = useState(null);
   const navigate = useNavigate();
-const { user } = useAuth();
+  const { user } = useAuth();
 
-const [placingOrder, setPlacingOrder] = useState(false);
-const [orderError, setOrderError] = useState("");
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [error, setError] = useState("");
   const [quoteError, setQuoteError] = useState("");
 
-
   const handlePlaceOrder = async () => {
-  if (!user) {
-    navigate("/login");
-    return;
-  }
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
-  if (!product || !quote || loadingQuote || placingOrder) {
-    return;
-  }
-
-  try {
-    setPlacingOrder(true);
-    setOrderError("");
-
-    const { data } = await api.post("/orders", {
-      productId: product._id,
-      quantity: Number(quantity),
-      options,
-      designId: designId || undefined,
-    });
+    if (!product || !quote || loadingQuote || placingOrder) {
+      return;
+    }
 
     try {
-      const checkout = await api.post(
-        `/payments/orders/${data.order._id}/checkout`,
-      );
-      window.location.href = checkout.data.url;
-    } catch {
-      // The order exists; the customer can pay from My orders.
-      navigate("/my-orders", {
-        state: { orderNumber: data.order.orderNumber },
+      setPlacingOrder(true);
+      setOrderError("");
+
+      const { data } = await api.post("/orders", {
+        productId: product._id,
+        quantity: Number(quantity),
+        options,
+        designId: designId || undefined,
       });
+
+      try {
+        const checkout = await api.post(
+          `/payments/orders/${data.order._id}/checkout`,
+        );
+        window.location.href = checkout.data.url;
+      } catch {
+        // The order exists; the customer can pay from My orders.
+        navigate("/my-orders", {
+          state: { orderNumber: data.order.orderNumber },
+        });
+      }
+    } catch (err) {
+      setOrderError(
+        err.response?.data?.message || "Unable to place your order.",
+      );
+    } finally {
+      setPlacingOrder(false);
     }
-  } catch (err) {
-    setOrderError(
-      err.response?.data?.message || "Unable to place your order."
-    );
-  } finally {
-    setPlacingOrder(false);
-  }
-};
+  };
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
@@ -86,8 +82,7 @@ const [orderError, setOrderError] = useState("");
         setOptions(null);
         setQuote(null);
 
-        const response = await axios.get(`${API_URL}/products/${slug}`);
-
+        const response = await api.get(`/products/${slug}`);
         const fetchedProduct = response.data.product;
 
         setProduct(fetchedProduct);
@@ -130,8 +125,8 @@ const [orderError, setOrderError] = useState("");
         setLoadingQuote(true);
         setQuoteError("");
 
-        const response = await axios.post(`${API_URL}/products/${slug}/quote`, {
-          quantity,
+        const response = await api.post(`/products/${slug}/quote`, {
+          quantity: Number(quantity),
           options,
         });
 
@@ -474,42 +469,56 @@ const [orderError, setOrderError] = useState("");
             </div>
 
             {orderError && (
-  <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
-    {orderError}
-  </p>
-)}
-<div className="mt-6 rounded-xl border border-dashed border-gray-300 p-4 text-sm">
+              <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
+                {orderError}
+              </p>
+            )}
+            <div className="mt-6 rounded-xl border border-dashed border-gray-300 p-4 text-sm">
               {designId ? (
                 <p className="flex flex-wrap items-center justify-between gap-2 text-gray-700">
                   <span className="inline-flex items-center gap-2 font-semibold">
-                    <CheckCircle2 size={16} className="text-green-600" /> Your saved design is attached to this order.
+                    <CheckCircle2 size={16} className="text-green-600" /> Your
+                    saved design is attached to this order.
                   </span>
-                  <Link to={`/designer/${slug}/${designId}`} className="font-bold text-orange-600">Edit design</Link>
+                  <Link
+                    to={`/designer/${slug}/${designId}`}
+                    className="font-bold text-orange-600"
+                  >
+                    Edit design
+                  </Link>
                 </p>
               ) : (
                 <p className="flex flex-wrap items-center justify-between gap-2 text-gray-600">
-                  <span>No artwork yet? Design it in the browser (or upload finished files after ordering).</span>
-                  <Link to={`/designer/${slug}`} className="font-bold text-orange-600">Open designer</Link>
+                  <span>
+                    No artwork yet? Design it in the browser (or upload finished
+                    files after ordering).
+                  </span>
+                  <Link
+                    to={`/designer/${slug}`}
+                    className="font-bold text-orange-600"
+                  >
+                    Open designer
+                  </Link>
                 </p>
               )}
             </div>
-<button
-  type="button"
-  onClick={handlePlaceOrder}
-  disabled={!quote || loadingQuote || placingOrder}
-  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-4 font-bold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
->
-  {placingOrder
-    ? "Placing your order..."
-    : user
-      ? "Place order"
-      : "Login to place order"}
-</button>
+            <button
+              type="button"
+              onClick={handlePlaceOrder}
+              disabled={!quote || loadingQuote || placingOrder}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-4 font-bold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {placingOrder
+                ? "Placing your order..."
+                : user
+                  ? "Place order"
+                  : "Login to place order"}
+            </button>
 
-<p className="mt-3 text-center text-xs text-gray-400">
-  Your final price is verified securely by our server.
-  Payment integration will follow in a separate phase.
-</p>
+            <p className="mt-3 text-center text-xs text-gray-400">
+              Your final price is verified securely by our server. Payment
+              integration will follow in a separate phase.
+            </p>
           </section>
         </div>
       </div>

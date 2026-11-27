@@ -16,6 +16,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { stripeWebhook } from './controllers/paymentController.js';
 import customerRoutes from './routes/customerRoutes.js'
+import { UPLOAD_ROOT } from './utils/paths.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -25,9 +26,11 @@ app.set('trust proxy', 1);
 
 // Uploaded images are loaded by the client on another origin, so allow cross-origin reads.
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use('/uploads', express.static(UPLOAD_ROOT));
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim().replace(/\/$/, ''));
+app.use(cors({ origin: allowedOrigins }));
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 app.use(express.json({ limit: '2mb' })); // canvas JSON can be a little large
 app.use(express.urlencoded({ extended: true }));

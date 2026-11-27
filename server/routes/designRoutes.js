@@ -3,12 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { UPLOAD_ROOT } from '../utils/paths.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { createDesign, getMyDesigns, getDesignById, updateDesign, deleteDesign } from '../controllers/designController.js';
 
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.resolve(__dirname, '../uploads/design-assets');
+const uploadDir = path.join(UPLOAD_ROOT, 'design-assets');
 fs.mkdirSync(uploadDir, { recursive: true });
 const allowedTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const storage = multer.diskStorage({

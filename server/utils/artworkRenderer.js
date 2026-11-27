@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url';
 import PDFDocument from 'pdfkit';
 import sharp from 'sharp';
 import { PRINT_AREA } from './printSpecs.js';
+import { UPLOAD_ROOT } from './paths.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOAD_ROOT = path.resolve(__dirname, '../uploads');
 const MIME_BY_EXT = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
