@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import path from 'path';
-import archiver from 'archiver';
+import * as archiver from 'archiver';
 import { parse } from 'csv-parse/sync';
 import Order from '../models/Order.js';
 import { ARTWORK_DIR } from '../utils/paths.js';

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 import api from '../services/api';
-import AdminPrintFiles from '../components/AdminPrintFiles';
+import AdminPrintFiles from '../components/AdmintPrintFiles';
 
 const formatCurrency = (amount = 0) =>
   new Intl.NumberFormat('en-IN', {
