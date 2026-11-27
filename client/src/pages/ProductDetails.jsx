@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -19,12 +22,49 @@ const ProductDetails = () => {
   const [options, setOptions] = useState(null);
   const [quantity, setQuantity] = useState(100);
   const [quote, setQuote] = useState(null);
+  const navigate = useNavigate();
+const { user } = useAuth();
+
+const [placingOrder, setPlacingOrder] = useState(false);
+const [orderError, setOrderError] = useState("");
 
   const [loadingProduct, setLoadingProduct] = useState(true);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [error, setError] = useState("");
   const [quoteError, setQuoteError] = useState("");
 
+
+  const handlePlaceOrder = async () => {
+  if (!user) {
+    navigate("/login");
+    return;
+  }
+
+  if (!product || !quote || loadingQuote || placingOrder) {
+    return;
+  }
+
+  try {
+    setPlacingOrder(true);
+    setOrderError("");
+
+    const { data } = await api.post("/orders", {
+      productId: product._id,
+      quantity: Number(quantity),
+      options,
+    });
+
+    navigate("/my-orders", {
+      state: { orderNumber: data.order.orderNumber },
+    });
+  } catch (err) {
+    setOrderError(
+      err.response?.data?.message || "Unable to place your order."
+    );
+  } finally {
+    setPlacingOrder(false);
+  }
+};
   // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
@@ -169,12 +209,12 @@ const ProductDetails = () => {
         <div className="mt-9 grid gap-10 lg:grid-cols-2">
           {/* Product information */}
           <section>
-            <div className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-white md:min-h-[480px]">
+            <div className="flex min-h-90 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-white md:min-h-120">
               {product.image ? (
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="h-full max-h-[480px] w-full object-cover"
+                  className="h-full max-h-120 w-full object-cover"
                 />
               ) : (
                 <div className="text-center">
@@ -422,10 +462,29 @@ const ProductDetails = () => {
               )}
             </div>
 
-            <p className="mt-5 text-xs leading-5 text-gray-400">
-              Prices shown are based on the current demo pricing configuration.
-              Checkout and order placement will be added in a later phase.
-            </p>
+            {orderError && (
+  <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
+    {orderError}
+  </p>
+)}
+
+<button
+  type="button"
+  onClick={handlePlaceOrder}
+  disabled={!quote || loadingQuote || placingOrder}
+  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 py-4 font-bold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {placingOrder
+    ? "Placing your order..."
+    : user
+      ? "Place order"
+      : "Login to place order"}
+</button>
+
+<p className="mt-3 text-center text-xs text-gray-400">
+  Your final price is verified securely by our server.
+  Payment integration will follow in a separate phase.
+</p>
           </section>
         </div>
       </div>

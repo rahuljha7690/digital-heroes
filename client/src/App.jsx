@@ -8,6 +8,7 @@ import Designer from './pages/Designer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MyDesigns from './pages/MyDesigns';
+import MyOrders from "./pages/MyOrders";
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -34,6 +35,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
             <Route path="/dashboard" element={<ComingSoon title="Customer Dashboard" />} />
             <Route path="/my-designs" element={<MyDesigns />} />
+            <Route path="/my-orders" element={<MyOrders />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<ComingSoon title="Admin Dashboard" />} />
