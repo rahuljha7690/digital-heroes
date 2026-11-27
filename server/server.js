@@ -5,6 +5,7 @@ import testRoutes from './routes/testRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import designRoutes from './routes/designRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check
