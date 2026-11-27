@@ -4,6 +4,8 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Proof from '../models/Proof.js';
 import Product from '../models/Product.js';
+import { notifyCustomer } from '../utils/notify.js';
+
 
 // Admin dashboard statistics
 export const getDashboardStats = async (req, res) => {
@@ -282,6 +284,10 @@ export const updateOrderStatus = async (req, res) => {
 
     order.status = status;
     await order.save();
+
+    if (['production', 'completed', 'cancelled'].includes(status)) {
+      notifyCustomer(order._id, 'order_status', { status });
+    }
 
     const updatedOrder = await Order.findById(order._id)
       .populate('customer', 'name email')
